@@ -1,0 +1,37 @@
+name: Build Windows (MSYS2)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup MSYS2 (UCRT64)
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            make
+            git
+            unzip
+            mingw-w64-ucrt-x86_64-gcc
+            curl
+
+      - name: Build (AVX2)
+        shell: msys2 {0}
+        run: |
+          cd src
+          make clean
+          rm -f .depend
+          make -j build ARCH=x86-64-avx2
+          ls -la
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pikafish-windows-x86-64-avx2
+          path: src/*.exe
